@@ -1,0 +1,15 @@
+{
+  "experiment": {
+    "name": "ann_evolutionary",
+    "episodes": 30,
+    "render": false,
+    "sleep": 0.03
+  },
+  "environment": {},
+  "controller": {
+    "type": "ann",
+    "params": {
+      "model_path": "models/ann_evolutionary.json"
+    }
+  }
+}

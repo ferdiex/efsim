@@ -139,6 +139,32 @@ For now, the heuristic controller remains the strongest reliable baseline in thi
 
 The ANN imitation-learning pipeline is still useful as a reproducible experiment, but it should be treated as a negative result / exploratory baseline rather than a successful controller.
 
+## Evolutionary dense ANN pipeline
+
+The repository now includes a basic evolutionary-robotics pipeline for a dense ANN policy:
+
+- script: `scripts/train_evolutionary_ann.py`
+- output model: `models/ann_evolutionary.json`
+- eval config: `configs/ann_evolutionary.json`
+
+Fitness combines:
+
+- Nolfi-style forward motion term (`linear * straight * (1 - max_proximity)`)
+- progress toward food (distance reduction)
+- success bonus when food is reached
+
+Train:
+
+```bash
+python scripts/train_evolutionary_ann.py --output models/ann_evolutionary.json --seed 0
+```
+
+Evaluate with the shared runner:
+
+```bash
+python run_experiment.py --config configs/ann_evolutionary.json
+```
+
 ## Next steps
 
 - implement a stronger heuristic obstacle-avoidance baseline

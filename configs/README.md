@@ -10,6 +10,7 @@ python run_experiment.py --config configs/braitenberg_baseline.json
 python run_experiment.py --config configs/heuristic_baseline.json
 python run_experiment.py --config configs/finite_state_baseline.json
 python run_experiment.py --config configs/ann_baseline.json
+python run_experiment.py --config configs/ann_evolutionary.json
 ```
 
 ## Render/debug examples
