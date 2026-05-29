@@ -1,0 +1,15 @@
+{
+  "experiment": {
+    "name": "heuristic_render_debug",
+    "episodes": 3,
+    "render": true,
+    "sleep": 0.01
+  },
+  "environment": {},
+  "controller": {
+    "type": "heuristic",
+    "params": {
+      "follow_side": "left"
+    }
+  }
+}

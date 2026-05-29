@@ -1,0 +1,15 @@
+{
+  "experiment": {
+    "name": "ann_test",
+    "episodes": 30,
+    "render": false,
+    "sleep": 0.03
+  },
+  "environment": {},
+  "controller": {
+    "type": "ann",
+    "params": {
+      "model_path": "models/ann_test.json"
+    }
+  }
+}
