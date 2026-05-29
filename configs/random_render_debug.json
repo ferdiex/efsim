@@ -1,0 +1,13 @@
+{
+  "experiment": {
+    "name": "random_render_debug",
+    "episodes": 3,
+    "render": true,
+    "sleep": 0.01
+  },
+  "environment": {},
+  "controller": {
+    "type": "random",
+    "params": {}
+  }
+}
