@@ -11,6 +11,7 @@ DEFAULT_CONTROLLER_KWARGS = {
     "braitenberg": {},
     "heuristic": {"follow_side": "left"},
     "finite_state": {"follow_side": "left"},
+    "debug": {},
 }
 
 
@@ -20,11 +21,16 @@ def parse_args():
         "--controller",
         type=str,
         default="heuristic",
-        choices=["random", "braitenberg", "heuristic", "finite_state"],
+        choices=["random", "braitenberg", "heuristic", "finite_state", "debug"],
         help="Controller type to run.",
     )
     parser.add_argument("--episodes", type=int, default=5, help="Number of episodes to run.")
     parser.add_argument("--sleep", type=float, default=0.03, help="Delay between rendered steps.")
+    parser.add_argument(
+        "--log-every-step",
+        action="store_true",
+        help="Print action, position, distance, and sensor values at every step.",
+    )
     return parser.parse_args()
 
 
@@ -43,6 +49,20 @@ def main():
 
             while not done:
                 action = controller.act(obs, info)
+
+                if args.log_every_step:
+                    print(
+                        f"step={info.get('step_count', -1)} "
+                        f"action={action} "
+                        f"pos={info.get('robot_position')} "
+                        f"dist={info.get('distance_to_food')} "
+                        f"front={obs[0]:.2f} "
+                        f"front_left={obs[1]:.2f} "
+                        f"left={obs[2]:.2f} "
+                        f"front_right={obs[7]:.2f} "
+                        f"odor={obs[8]:.2f}"
+                    )
+
                 obs, reward, terminated, truncated, info = env.step(action)
                 total_reward += reward
                 done = terminated or truncated
@@ -62,3 +82,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+

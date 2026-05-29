@@ -7,6 +7,7 @@ from .designed.braitenberg_controller import BraitenbergController
 from .designed.finite_state_controller import FiniteStateController
 from .designed.heuristic_controller import HeuristicController
 from .designed.random_controller import RandomController
+from .designed.debug_controller import DebugController
 from .trained.ann_controller import ANNController
 from .trained.lstm_controller import LSTMController
 from .trained.transformer_controller import TransformerController
@@ -20,6 +21,7 @@ CONTROLLER_REGISTRY = {
     "ann": ANNController,
     "lstm": LSTMController,
     "transformer": TransformerController,
+    "debug": DebugController,
 }
 
 
