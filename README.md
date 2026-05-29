@@ -81,6 +81,64 @@ Relevant files:
 - `configs/ann_test.json`
 - `configs/ann_test_render.json`
 
+## Findings: ANN imitation learning limitations
+
+We ran a series of sanity checks and imitation-learning experiments to evaluate whether a simple feedforward ANN controller could solve the foraging task.
+
+### Simulator sanity checks
+
+Before blaming the learned controller, we validated the simulator itself with a deterministic debug controller:
+
+- `forward` moves the robot consistently.
+- `turn_left` and `turn_right` rotate the robot consistently in place.
+- `reverse` moves the robot away from obstacles.
+- proximity sensor readings change coherently with obstacle geometry and robot orientation.
+- collision behavior is consistent: when the robot pushes into an obstacle, position stops changing and frontal sensors remain high.
+
+These checks strongly suggest that the simulator dynamics, action mapping, and sensor signals are working well enough for the task.
+
+### Imitation-learning experiments
+
+We collected supervised datasets from the heuristic controller and trained a feedforward ANN to imitate its action choices.
+
+What we tried:
+
+- dataset collection from the heuristic controller with `follow_side="left"`
+- dataset collection from the heuristic controller with `follow_side="right"`
+- combining both datasets to reduce left/right action imbalance
+- class-weighted supervised training
+- frame stacking (`history=4`) to provide short-term temporal context
+- optional safety overrides during ANN execution
+
+### Result
+
+Despite these changes, the ANN-based controller still failed to solve the task reliably:
+
+- success rate remained `0.000` in evaluation runs
+- average episode length remained at the timeout horizon
+- final distance to food did not improve enough to indicate useful closed-loop behavior
+
+This suggests that simple feedforward behavior cloning from the current heuristic policy is **not sufficient** for this task.
+
+### Interpretation
+
+The main issue does **not** appear to be the simulator.
+
+Instead, the task likely requires one or more of the following:
+
+- stronger temporal memory than a small feedforward ANN can provide
+- a better expert policy
+- better state coverage during data collection
+- corrective data aggregation (e.g. DAgger)
+- recurrent models (LSTM/GRU) or reinforcement learning
+- a hybrid controller that combines heuristic obstacle negotiation with learned goal-seeking
+
+### Practical takeaway
+
+For now, the heuristic controller remains the strongest reliable baseline in this repository.
+
+The ANN imitation-learning pipeline is still useful as a reproducible experiment, but it should be treated as a negative result / exploratory baseline rather than a successful controller.
+
 ## Next steps
 
 - implement a stronger heuristic obstacle-avoidance baseline

@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 import json
+from collections import deque
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Deque, Dict, Optional
 
 import numpy as np
 
@@ -10,7 +11,9 @@ from ..base import BaseController
 
 
 class ANNController(BaseController):
-    """Feedforward ANN controller with an explicit unstuck routine."""
+    """Feedforward ANN controller with optional input normalization, frame history,
+    and minimal safety overrides for obstacle negotiation.
+    """
 
     family = "trained"
     controller_type = "ann"
@@ -19,13 +22,6 @@ class ANNController(BaseController):
         self,
         model: Any = None,
         model_path: Optional[str] = None,
-        turn_commit_steps: int = 3,
-        obstacle_threshold: float = 0.6,
-        critical_threshold: float = 0.85,
-        clear_threshold: float = 0.25,
-        reverse_steps: int = 2,
-        turn_steps: int = 8,
-        forward_steps: int = 4,
     ):
         if model is None and model_path is None:
             raise ValueError("ANNController requires either 'model' or 'model_path'.")
@@ -39,67 +35,96 @@ class ANNController(BaseController):
         if len(self.weights) != len(self.biases):
             raise ValueError("Model weights and biases must have the same number of layers.")
 
-        self.turn_commit_steps = max(0, int(turn_commit_steps))
-        self.obstacle_threshold = float(obstacle_threshold)
-        self.critical_threshold = float(critical_threshold)
-        self.clear_threshold = float(clear_threshold)
+        self.input_mean = None
+        self.input_std = None
 
-        self.reverse_steps = max(0, int(reverse_steps))
-        self.turn_steps = max(0, int(turn_steps))
-        self.forward_steps = max(0, int(forward_steps))
+        normalization = model.get("normalization")
+        if normalization is not None:
+            self.input_mean = np.asarray(normalization["mean"], dtype=np.float32)
+            self.input_std = np.asarray(normalization["std"], dtype=np.float32)
 
-        self._committed_action: Optional[int] = None
-        self._commit_remaining = 0
+        self.history_length = int(model.get("history_length", 1))
+        self.base_obs_dim = int(model.get("base_obs_dim", 9))
+        self.obs_history: Deque[np.ndarray] = deque(maxlen=self.history_length)
 
-        self._unstuck_plan: List[int] = []
+        self.last_positions: Deque[np.ndarray] = deque(maxlen=12)
+        self.reverse_steps_remaining = 0
+        self.turn_steps_remaining = 0
+        self.turn_action = 1
+
+    def reset(self) -> None:
+        self.obs_history = deque(maxlen=self.history_length)
+        self.last_positions = deque(maxlen=12)
+        self.reverse_steps_remaining = 0
+        self.turn_steps_remaining = 0
+        self.turn_action = 1
 
     def act(self, obs: np.ndarray, info: Optional[Dict[str, Any]] = None) -> int:
         obs = np.asarray(obs, dtype=np.float32)
 
+        if len(self.obs_history) == 0:
+            for _ in range(self.history_length):
+                self.obs_history.append(obs.copy())
+        else:
+            self.obs_history.append(obs.copy())
+
+        if info is not None and info.get("robot_position") is not None:
+            self.last_positions.append(np.asarray(info["robot_position"], dtype=np.float32))
+
         front = float(obs[0])
         front_left = float(obs[1])
+        left = float(obs[2])
         front_right = float(obs[7])
 
-        if self._unstuck_plan:
-            if front <= self.clear_threshold and self._unstuck_plan[0] == 0:
-                self._unstuck_plan.clear()
-            else:
-                return int(self._unstuck_plan.pop(0))
+        if self.reverse_steps_remaining > 0:
+            self.reverse_steps_remaining -= 1
+            return 3
 
-        if self._commit_remaining > 0 and self._committed_action is not None:
-            self._commit_remaining -= 1
-            return int(self._committed_action)
+        if self.turn_steps_remaining > 0:
+            self.turn_steps_remaining -= 1
+            return self.turn_action
 
-        if front >= self.critical_threshold:
-            turn_action = 1 if front_left < front_right else 2
-            self._unstuck_plan = (
-                [3] * self.reverse_steps
-                + [turn_action] * self.turn_steps
-                + [0] * self.forward_steps
-            )
-            return int(self._unstuck_plan.pop(0))
+        if self._is_stuck():
+            self.reverse_steps_remaining = 3
+            self.turn_steps_remaining = 6
+            self.turn_action = 1 if front_right > front_left else 2
+            return 3
 
-        x = obs
+        # Hard obstacle override
+        if front > 0.72:
+            self.turn_steps_remaining = 5
+            self.turn_action = 1 if front_right > front_left else 2
+            return self.turn_action
+
+        # Near-obstacle override
+        if front > 0.55:
+            if front_left > front_right:
+                return 2
+            return 1
+
+        # Wall-too-close correction
+        if left > 0.80 and front < 0.40:
+            return 2
+
+        x = np.concatenate(list(self.obs_history), axis=0).astype(np.float32)
+
+        if self.input_mean is not None and self.input_std is not None:
+            x = (x - self.input_mean) / self.input_std
+
         for i, (weight, bias) in enumerate(zip(self.weights, self.biases)):
             x = x @ weight + bias
             if i < len(self.weights) - 1:
-                x = np.tanh(x)
+                x = np.maximum(0.0, x)
 
-        action = int(np.argmax(x))
+        return int(np.argmax(x))
 
-        if front >= self.obstacle_threshold and action == 0:
-            turn_action = 1 if front_left < front_right else 2
-            self._unstuck_plan = [turn_action] * self.turn_steps + [0] * self.forward_steps
-            return int(self._unstuck_plan.pop(0))
-
-        if action in (1, 2) and self.turn_commit_steps > 0:
-            self._committed_action = action
-            self._commit_remaining = self.turn_commit_steps - 1
-        else:
-            self._committed_action = None
-            self._commit_remaining = 0
-
-        return action
+    def _is_stuck(self) -> bool:
+        if len(self.last_positions) < self.last_positions.maxlen:
+            return False
+        start = self.last_positions[0]
+        end = self.last_positions[-1]
+        dist = float(np.linalg.norm(end - start))
+        return dist < 10.0
 
     def _load_model(self, model_path: str) -> Dict[str, Any]:
         path = Path(model_path)
