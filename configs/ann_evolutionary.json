@@ -1,8 +1,8 @@
 {
   "experiment": {
     "name": "ann_evolutionary",
-    "episodes": 30,
-    "render": false,
+    "episodes": 3,
+    "render": true,
     "sleep": 0.03
   },
   "environment": {},
