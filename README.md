@@ -48,6 +48,12 @@ The repository now includes a minimal feedforward ANN controller that can:
 - run feedforward inference
 - choose a discrete action from logits
 
+You can generate new ANN model files with:
+
+```bash
+python scripts/init_ann_model.py --output models/ann_test.json --layers 9 8 4 --scale 0.1 --seed 0
+```
+
 ## Next steps
 
 - improve ANN experiments
