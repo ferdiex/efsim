@@ -10,8 +10,8 @@ from ..base import BaseController
 class BraitenbergController(BaseController):
     """Simple Braitenberg-style reactive controller.
 
-    This version keeps the controller intentionally simple, but adds a tiny
-    amount of state to recover when it gets pinned against a wall.
+    Kept intentionally simple, but with small recovery and turn persistence so
+    it does not get trapped so easily against walls.
     """
 
     family = "designed"
@@ -20,13 +20,14 @@ class BraitenbergController(BaseController):
     def __init__(
         self,
         obstacle_gain: float = 1.0,
-        odor_gain: float = 0.25,
-        clear_front_threshold: float = 0.30,
-        reverse_threshold: float = 0.90,
+        odor_gain: float = 0.35,
+        clear_front_threshold: float = 0.40,
+        reverse_threshold: float = 0.85,
         stuck_window: int = 12,
         stuck_distance_threshold: float = 8.0,
         recovery_reverse_steps: int = 2,
-        recovery_turn_steps: int = 3,
+        recovery_turn_steps: int = 4,
+        turn_commit_steps: int = 2,
     ):
         self.obstacle_gain = obstacle_gain
         self.odor_gain = odor_gain
@@ -36,6 +37,7 @@ class BraitenbergController(BaseController):
         self.stuck_distance_threshold = stuck_distance_threshold
         self.recovery_reverse_steps = recovery_reverse_steps
         self.recovery_turn_steps = recovery_turn_steps
+        self.turn_commit_steps = turn_commit_steps
         self.reset()
 
     def reset(self) -> None:
@@ -69,27 +71,29 @@ class BraitenbergController(BaseController):
         right = float(prox[6])
         front_right = float(prox[7])
 
+        left_signal = front_left + left + 0.5 * back_left
+        right_signal = front_right + right + 0.5 * back_right
+
         if self._looks_stuck():
             self.reverse_steps_remaining = self.recovery_reverse_steps
             self.turn_action = 1 if left <= right else 2
             self.turn_steps_remaining = self.recovery_turn_steps
             return 3
 
-        left_signal = front_left + left + 0.5 * back_left
-        right_signal = front_right + right + 0.5 * back_right
-
-        if front > self.reverse_threshold:
+        if front > self.reverse_threshold or max(front_left, front_right) > 0.90:
+            self.reverse_steps_remaining = self.recovery_reverse_steps
             self.turn_action = 1 if left <= right else 2
             self.turn_steps_remaining = self.recovery_turn_steps
             return 3
 
         turn_drive = self.obstacle_gain * (left_signal - right_signal)
-        forward_drive = self.odor_gain * odor - front
+        forward_drive = self.odor_gain * odor - 0.7 * front
 
-        if front < self.clear_front_threshold and forward_drive >= -0.05:
+        if front < self.clear_front_threshold and abs(turn_drive) < 0.15 and forward_drive >= -0.02:
             return 0
 
         self.turn_action = 2 if turn_drive > 0.0 else 1
+        self.turn_steps_remaining = self.turn_commit_steps
         return self.turn_action
 
     def _update_position_history(self, position: np.ndarray) -> None:
@@ -102,3 +106,4 @@ class BraitenbergController(BaseController):
             return False
         displacement = np.linalg.norm(self.last_positions[-1] - self.last_positions[0])
         return bool(displacement < self.stuck_distance_threshold)
+    
