@@ -55,9 +55,9 @@ def unpack_genome(genome: np.ndarray, layer_sizes: list[int]) -> Tuple[list[np.n
         w_size = in_dim * out_dim
         b_size = out_dim
 
-        w = genome[cursor: cursor + w_size].reshape(in_dim, out_dim)
+        w = genome[cursor:cursor + w_size].reshape(in_dim, out_dim)
         cursor += w_size
-        b = genome[cursor: cursor + b_size]
+        b = genome[cursor:cursor + b_size]
         cursor += b_size
 
         weights.append(w.astype(np.float32))
