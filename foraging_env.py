@@ -40,7 +40,7 @@ class ForagingEnv(gym.Env):
         self.step_count = 0
 
         self.robot_pos, self.robot_theta = self._sample_robot_pose()
-        self.food_pos = self._sample_food_position()
+        self.food_positions = [self._sample_food_position() for _ in range(2)] 
 
         obs = self._get_obs()
         info = self._get_info()
@@ -107,7 +107,7 @@ class ForagingEnv(gym.Env):
     def _get_info(self) -> dict:
         return {
             "step_count": self.step_count,
-            "distance_to_food": float(np.linalg.norm(self.robot_pos - self.food_pos)),
+            "distance_to_food": float(min(np.linalg.norm(self.robot_pos - f) for f in self.food_positions)), 
             "success": self._is_success(),
             "robot_position": self.robot_pos.copy(),
         }
@@ -161,8 +161,8 @@ class ForagingEnv(gym.Env):
         return float(self.config.sensor_range)
 
     def _is_success(self) -> bool:
-        d = np.linalg.norm(self.robot_pos - self.food_pos)
-        return d < self.config.success_threshold
+        return any(np.linalg.norm(self.robot_pos - f) < self.config.success_threshold
+                   for f in self.food_positions)
 
     def _sample_robot_pose(self) -> Tuple[np.ndarray, float]:
         for _ in range(1000):
@@ -225,9 +225,6 @@ class ForagingEnv(gym.Env):
         return [
             (180, 120, 80, 220),
             (340, 60, 60, 160),
-            (470, 280, 170, 60),
-            (250, 430, 220, 50),
-            (600, 100, 70, 120),
         ]
 
     def _heading_vector(self, angle: float) -> np.ndarray:
@@ -241,13 +238,14 @@ class ForagingEnv(gym.Env):
             pygame.draw.rect(canvas, self.config.obstacle_color, pygame.Rect(ox, oy, ow, oh))
 
     def _draw_food(self, canvas):
-        pygame.draw.circle(
-            canvas,
-            self.config.food_color,
-            self.food_pos.astype(int),
-            int(self.config.food_radius),
+        for f in self.food_positions:
+            pygame.draw.circle(
+                canvas,
+                self.config.food_color,
+                f.astype(int),
+                int(self.config.food_radius),
         )
-
+    
     def _draw_robot(self, canvas):
         pygame.draw.circle(
             canvas,
@@ -269,10 +267,12 @@ class ForagingEnv(gym.Env):
 
     def _draw_odor(self, canvas):
         surface = pygame.Surface((self.config.world_width, self.config.world_height), pygame.SRCALPHA)
-        pygame.draw.circle(
-            surface,
-            (*self.config.odor_color, 40),
-            self.food_pos.astype(int),
-            int(self.config.odor_radius),
-        )
+        for f in self.food_positions:
+            pygame.draw.circle(
+                surface,
+                (*self.config.odor_color, 40),
+                f.astype(int),
+                int(self.config.odor_radius),
+            )
         canvas.blit(surface, (0, 0))
+

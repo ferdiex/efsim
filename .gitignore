@@ -1,4 +1,5 @@
 __pycache__/
+*.bak
 *.py[cod]
 *.pyo
 *.pyd
@@ -12,3 +13,4 @@ build/
 .DS_Store
 data/
 models/ann_imitation.json
+audit/

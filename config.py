@@ -9,11 +9,11 @@ class ForagingEnvConfig:
     world_height: int = 600
 
     robot_radius: float = 12.0
-    food_radius: float = 14.0
-    success_threshold: float = 14.0
+    food_radius: float = 40.0 
+    success_threshold: float = 40.0 
 
     odor_radius: float = 140.0
-    sensor_range: float = 100.0
+    sensor_range: float = 60.0 
     num_sensors: int = 8
 
     max_steps: int = 300
