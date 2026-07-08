@@ -1,6 +1,6 @@
 {
   "experiment": {
-    "name": "ann_evolutionary",
+    "name": "ann_hid",
     "episodes": 3,
     "render": true,
     "sleep": 0.01
@@ -9,7 +9,7 @@
   "controller": {
     "type": "ann",
     "params": {
-      "model_path": "models/ann_evolutionary.json"
+      "model_path": "models/ann_hid.json"
     }
   }
 }

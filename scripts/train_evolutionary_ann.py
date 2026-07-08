@@ -81,6 +81,11 @@ def nolfi_step_score(action: int, obs: np.ndarray) -> float:
     delta_v = min(1.0, abs(v_l - v_r))
     straight = 1.0 - np.sqrt(delta_v)
     obstacle_term = 1.0 - float(np.max(obs[:8]))
+    
+    # ADDED: Penaliza giros puros (cuando linear ≈ 0 pero delta_v alto)
+    if linear < 0.05 and delta_v > 0.5:
+        return -0.1 * obstacle_term
+    
     return linear * straight * obstacle_term
 
 
@@ -106,16 +111,38 @@ def evaluate_genome(
 
         while not done:
             action = policy_action(obs, weights, biases)
-            next_obs, _, terminated, truncated, next_info = env.step(action)
+            next_obs, reward, terminated, truncated, next_info = env.step(action)
+            total_score += reward # ADDED
             done = terminated or truncated
 
             nolfi_term = nolfi_step_score(action, obs)
-
             new_distance = float(next_info["distance_to_food"])
+            
+            # Normalized distance in relation to odour
+            proximity_reward = max(0.0, 1.0 - new_distance / env.config.odor_radius) # ADDED
+            # add gradient to total reward
+            total_score += 0.7 * proximity_reward # ADDED
+            
+            # extra reward for oudor
+            odor_signal = obs[-1]
+            total_score += 0.7 * odor_signal #ADDDED
+            
+            # ADDED: penalización por estar pegado a obstáculos
+            collision_penalty = -0.5 * max(obs[:-1])   # penaliza el sensor más activado
+            total_score += collision_penalty
+
+            # ADDED: bonus por espacio libre
+            free_space_bonus = 0.5 * (1.0 - max(obs[:-1]))
+            total_score += free_space_bonus            
+            
+            # ADDED: bonus for entering food zone
+            if new_distance < env.config.success_threshold:
+                total_score += success_bonus * 0.5  # half reward for entering the food zone
+            
             progress = (prev_distance - new_distance) / max(env.config.min_spawn_distance, 1.0)
             progress = float(np.clip(progress, -1.0, 1.0))
-
             total_score += nolfi_weight * nolfi_term + progress_weight * progress
+
             prev_distance = new_distance
             obs = next_obs
 
