@@ -1,0 +1,5 @@
+numpy
+gymnasium
+pygame
+numba
+imageio

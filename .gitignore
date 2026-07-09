@@ -1,0 +1,24 @@
+# macOS
+.DS_Store
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+.env
+.venv
+venv/
+dist/
+build/
+*.egg-info/
+
+# experiment artifacts
+*.log
+*.tmp
+*.bak
+
+# ignore extra things
+PIOJOS.md
+commands.txt
