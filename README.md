@@ -1,6 +1,6 @@
 # EFSIM — Cooperative Foraging with Evolved GRU Controllers
 
-Minimal stable repository for cooperative foraging experiments and paper figures.
+Minimal stable repository for cooperative foraging experiments and reproducible evaluation.
 
 ## Stable Version
 
@@ -35,32 +35,32 @@ pip install numpy pandas matplotlib seaborn pygame
 - `scripts/train_social.py` — social/cooperative training pipeline
 - `run.py` — evaluation and rendering entry point
 - `analyze_results.py` — CSV metrics summary
-- `generate_plots.py` — paper plots
+- `generate_plots.py` — figure generation
 - `models/social_emergence.json` — stable GRU model
-- `logs/` — experiment outputs (paper baseline CSV included)
+- `logs/` — experiment outputs (baseline results included)
 
 ---
 
 ## 3) Working Commands
 
-### Quick smoke test (CSV)
+### Quick smoke test (CSV output)
 ```bash
 python run.py --type gru --model models/social_emergence.json --agents 2 --u_env --episodes 3 --social_mode normal --save_csv --csv_out smoke_social_emergence.csv
 ```
 
-### Visual run
+### Visual evaluation
 ```bash
 python run.py --type gru --model models/social_emergence.json --render
 ```
 
-### Paper baseline (20 episodes)
+### Baseline evaluation (20 episodes)
 ```bash
-python run.py --type gru --model models/social_emergence.json --agents 2 --u_env --episodes 20 --social_mode normal --save_csv --csv_out logs/paper_baseline_social_emergence_20ep.csv
+python run.py --type gru --model models/social_emergence.json --agents 2 --u_env --episodes 20 --social_mode normal --save_csv --csv_out logs/baseline_social_emergence_20ep.csv
 ```
 
-### Analyze baseline
+### Analyze results
 ```bash
-python analyze_results.py logs/paper_baseline_social_emergence_20ep.csv
+python analyze_results.py logs/baseline_social_emergence_20ep.csv
 ```
 
 ### Generate figures
@@ -88,5 +88,6 @@ python scripts/train_social.py --type gru --agents 2 --load models/social_emerge
 
 ## 5) Notes
 
-- This README documents the **stable paper-oriented pipeline only**.
+- This README documents the **stable reproducible workflow**.
 - Legacy/experimental controllers and scripts are intentionally omitted from this guide.
+
