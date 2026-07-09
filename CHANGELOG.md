@@ -12,4 +12,4 @@
 - Plots: `generate_plots.py`
 
 ### Notes
-- Legacy/experimental scripts are intentionally excluded from the stable paper workflow.
+- Legacy/experimental scripts are intentionally excluded from the stable version.
