@@ -90,4 +90,5 @@ python scripts/train_social.py --type gru --agents 2 --load models/social_emerge
 
 - This README documents the **stable reproducible workflow**.
 - Legacy/experimental controllers and scripts are intentionally omitted from this guide.
+- This version was archived for the IJAAS manuscript: "Emergent Reciprocal Communication in Evolutionary GRU-Residual Agents".
 
