@@ -11,7 +11,7 @@ This archived release corresponds to the simulator version used to generate the 
 The repository provides a platform for studying emergent communication, cooperative navigation, evolutionary robotics, and multi-agent coordination using recurrent neural controllers and signaling mechanisms.
 
 <p align="center">
-images/efsim.png
+  <img src="images/efsim.png" alt="Cooperative foraging scenario with signaling agents" width="600">
 </p>
 
 The image illustrates a cooperative foraging scenario in which robotic agents use signaling and navigation behaviors to locate a target in an obstacle-rich environment.
