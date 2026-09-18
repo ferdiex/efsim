@@ -1,6 +1,6 @@
 # efsim — Evolutionary Robotics Simulator
 
-[![DOI](https://zenodo.org/badge/1252889264.svg)](https://doi.org/10.5281/zenodo.22821253)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.22821253.svg)](https://doi.org/10.5281/zenodo.22821253)
 
 Archived research release associated with:
 
