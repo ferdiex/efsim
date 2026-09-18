@@ -1,10 +1,18 @@
-# EFSIM — Cooperative Foraging with Evolved GRU Controllers
+# efsim — Evolutionary Robotics Simulator
 
-Minimal stable repository for cooperative foraging experiments and reproducible evaluation.
+[![DOI](https://zenodo.org/badge/1252889264.svg)](https://doi.org/10.5281/zenodo.22821253)
+
+Archived research release associated with:
+
+**Emergent Reciprocal Communication in Evolutionary GRU-Residual Agents**
+
+This archived release corresponds to the simulator version used to generate the experiments reported in the associated publication.
+
+The repository provides a platform for studying emergent communication, cooperative navigation, evolutionary robotics, and multi-agent coordination using recurrent neural controllers and signaling mechanisms.
 
 ## Stable Version
 
-Current stable version: **1.0.0**
+Current archived version: **v1.0-ijaas**
 
 ```bash
 python run.py --version
@@ -20,7 +28,7 @@ conda activate efsim
 pip install -r requirements.txt
 ```
 
-If you do not use `requirements.txt`, install at least:
+If you do not use 'requirements.txt', install at least:
 
 ```bash
 pip install numpy pandas matplotlib seaborn pygame
